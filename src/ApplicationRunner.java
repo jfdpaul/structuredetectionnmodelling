@@ -1,9 +1,12 @@
+import java.io.IOException;
+import java.io.InterruptedIOException;
+
 /**
  * Created by SONY on 2/21/2016.
  */
 public class ApplicationRunner {
-    public static void main(String[]args)
+    public static void main(String[]args)throws Exception
     {
-        Application app=new Application();
+        javax.swing.SwingUtilities.invokeAndWait(Application::new);
     }
 }

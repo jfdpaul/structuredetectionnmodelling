@@ -1,13 +1,16 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 /**
  * Created by SONY on 2/21/2016.
  */
-public class Application extends JPanel{
+public class Application extends JPanel implements Runnable{
 
     JFrame f;
+    JTextArea ta;
     private int bufferX,bufferY,holdX,holdY;
     int mat[][];
     int W,H;
@@ -32,29 +35,42 @@ public class Application extends JPanel{
         holdX=150;
         holdY=150;
 
-        f=new JFrame("Structure Modeling");
-        f.setVisible(true);
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.setSize(700,700);
-/*
-        int v=ScrollPaneConstants. VERTICAL_SCROLLBAR_ALWAYS;
-        int h=ScrollPaneConstants. HORIZONTAL_SCROLLBAR_ALWAYS;
-        JScrollPane jsp = new JScrollPane(this,v,h);
-        f. getContentPane(). add(jsp);
-*/
-        f.add(this);
-        ArrayList<ModelVector> list=ModelVector.getModelList("C:\\Users\\SONY\\IdeaProjects\\StructureModelling\\data.txt");
+        JFrame jj=new JFrame();
+        jj.setVisible(true);
+        jj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jj.setSize(400,350);
+        JPanel p=new JPanel();
+        p.setLayout(null);
+        p.setBackground(Color.darkGray);
+        Label l1=new Label("Structure & 2D Modelling");
+        l1.setForeground(Color.WHITE);
+        l1.setFont(new Font(null,Font.PLAIN,25));
+        TextField urlField=new TextField("192.168.173.8:8086",20);
+        Button b1=new Button("Scan");
+        Button b2=new Button("Model");
+        b1.setBackground(Color.cyan);
+        b2.setBackground(Color.orange);
+        l1.setBounds(60,10,300,40);
+        urlField.setBounds(90,80,200,40);
+        b1.setBounds(90,180,200,40);
+        b2.setBounds(90,250,200,40);
+        ta=new JTextArea(5,5);
+        JScrollPane scroll = new JScrollPane (ta,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll.setBounds(50,340,300,120);
+        p.add(l1);
+        p.add(urlField);
+        p.add(b1);
+        p.add(b2);
+        p.add(scroll);
+        jj.add(p);
 
-        for(ModelVector l:list)
-        {
-            l.printValues();
-            setPosition(l);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        b2.addActionListener(new ActionListener() {
+                                 @Override
+                                 public void actionPerformed(ActionEvent e) {
+                                     showModel();
+                                 }
+                             });
+        b1.addActionListener(e -> scan(urlField.getText()));
     }
 
     private void setPosition(ModelVector mv)
@@ -200,6 +216,49 @@ public class Application extends JPanel{
         }
 ///
         repaint();
+    }
+
+    public void run()
+    {
+        f=new JFrame("Structure Modeling");
+        f.setVisible(true);
+        f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        f.setSize(700,700);
+/*
+        int v=ScrollPaneConstants. VERTICAL_SCROLLBAR_ALWAYS;
+        int h=ScrollPaneConstants. HORIZONTAL_SCROLLBAR_ALWAYS;
+        JScrollPane jsp = new JScrollPane(this,v,h);
+        f. getContentPane(). add(jsp);
+*/
+        f.add(this);
+
+        ArrayList<ModelVector> list=ModelVector.getModelList("C:\\Users\\SONY\\IdeaProjects\\StructureModelling\\data.txt");
+
+        for(ModelVector l:list)
+        {
+            l.printValues();
+            setPosition(l);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    private void showModel()
+    {
+        Thread t=new Thread(this);
+        t.start();
+    }
+
+    private void scan(String url)
+    {
+        ServerConnect sc=new ServerConnect();
+        try{
+            String response=sc.sendGet(url);
+            ta.setText(response);
+        }
+        catch(Exception e){e.printStackTrace();}
     }
 
     public void paintComponent(Graphics g)
